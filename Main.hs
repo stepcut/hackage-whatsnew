@@ -48,6 +48,8 @@ fetchFromHackage pi@(PackageIdentifier (PackageName pn) version) = do
       return $ packageFile repoLocal pi
     (ExitFailure _) -> do
       putStrLn "Failed to fetch package from hackage."
+      putStr out
+      hPutStr stderr err
       exitWith (ExitFailure 2)
 
 cabalSDist :: PackageIdentifier -> IO FilePath
@@ -70,8 +72,8 @@ tardiff :: FilePath -> FilePath -> IO ()
 tardiff tar1 tar2 =
   withSystemTempDirectory "tardiff-XXXXXX" $ \tar1dir ->
   withSystemTempDirectory "tardiff-XXXXXX" $ \tar2dir -> do
-    callProcess "tar" ["-C",tar1dir, "-x", "-f", tar1]
-    callProcess "tar" ["-C",tar2dir, "-x", "-f", tar2]
+    callProcess "tar" ["-C",tar1dir, "-x", "-z", "--strip=1", "-f", tar1]
+    callProcess "tar" ["-C",tar2dir, "-x", "-z", "--strip=1", "-f", tar2]
     (ec, out, err) <- readProcessWithExitCode "diff" ["-r","-N","-u", tar1dir, tar2dir] ""
     case ec of
       ExitSuccess -> exitSuccess
