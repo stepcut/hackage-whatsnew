@@ -28,3 +28,9 @@ This tool works as follows:
 
 
 
+FAQ
+---
+
+**Q**: Why is it called `hackage-whatsnew` instead of `hackage-diff`?
+
+**A**: Because `hackage-diff` was already taken. The `whatsnew` term is inspired by `darcs whatsnew`.
