@@ -1,5 +1,9 @@
 name:                hackage-whatsnew
 version:             0.1.0.0
+synopsis:            Check for differences between working directory and hackage
+description:         This tool checks to see if the package in a local working directory
+                     has changes which are not yet on hackage. This is useful to check if
+                     you have forgetton to upload your changes to hackage.
 license:             BSD3
 license-file:        LICENSE
 author:              Jeremy Shaw
@@ -7,6 +11,12 @@ maintainer:          jeremy@n-heptane.com
 category:            Distribution
 build-type:          Simple
 cabal-version:       >=1.10
+tested-with:         GHC == 7.6.3, GHC == 7.8.4, GHC == 7.10.3
+extra-source-files:  README.md
+
+source-repository head
+    type:     git
+    location: https://github.com/stepcut/hackage-whatsnew.git
 
 executable hackage-whatsnew
   main-is:             Main.hs
