@@ -16,11 +16,15 @@ import System.IO (hPutStr, hPutStrLn, stderr)
 import System.IO.Temp (withSystemTempDirectory)
 import System.Process
 
+-- | get the package description for the local directory
 local :: Verbosity -> IO PackageDescription
 local v =
   fmap packageDescription (readPackageDescription v =<< defaultPackageDesc v)
 
-hackage :: PackageName
+-- | get the package description from hackage
+--
+-- This gets the latest version available.
+hackage :: PackageName -- ^ the package name
         -> IO (Maybe PackageDescription)
 hackage (PackageName pn) = do
   hackage <- readHackage
@@ -30,15 +34,21 @@ hackage (PackageName pn) = do
     (Just gpdMap) ->
       return $ Just $ packageDescription (snd $ head $ Map.toDescList gpdMap)
 
+-- | calculate the directory to the tarball for `PackageIndentifier`
 packageDir :: FilePath -> PackageIdentifier -> FilePath
 packageDir repoLocal (PackageIdentifier pn version) =
     repoLocal </> display pn </> display version
 
+-- | calculate the path to the tarball for `PackageIndentifier`
 packageFile :: FilePath -> PackageIdentifier -> FilePath
 packageFile repoLocal pi =
     (packageDir repoLocal pi) </> display pi <.> "tar.gz"
 
-fetchFromHackage :: PackageIdentifier -> IO FilePath
+-- | fetch `PackageIdentifier` from hackage
+--
+-- returns path to downloaded `.tar.gz`
+fetchFromHackage :: PackageIdentifier
+                 -> IO FilePath
 fetchFromHackage pi@(PackageIdentifier (PackageName pn) version) = do
   (ec, out, err) <- readProcessWithExitCode "cabal" ["fetch", "--no-dependencies", display pi] ""
   case ec of
@@ -52,6 +62,7 @@ fetchFromHackage pi@(PackageIdentifier (PackageName pn) version) = do
       hPutStr stderr err
       exitWith (ExitFailure 2)
 
+-- | create a `.tar.gz` in the local directory by calling `cabal sdist`.
 cabalSDist :: PackageIdentifier -> IO FilePath
 cabalSDist pi = do
   (ec, out, err) <- readProcessWithExitCode "cabal" ["sdist"] ""
@@ -63,12 +74,17 @@ cabalSDist pi = do
     ExitSuccess ->
       return $ "dist" </> display pi <.> "tar.gz"
 
+-- | calculate the `sha256sum`
+
 sha256Sum :: FilePath -> IO String
 sha256Sum fp =
     do sum <- readProcess "sha256sum" [fp] "" -- `catch`
        return $ takeWhile (/= ' ') sum
 
-tardiff :: FilePath -> FilePath -> IO ()
+-- | extract two `tar.gz` filesa nd run a recursive diff on them.
+tardiff :: FilePath -- ^ tarball 'a'
+        -> FilePath -- ^ tarball 'b'
+        -> IO ()
 tardiff tar1 tar2 =
   withSystemTempDirectory "tardiff-XXXXXX" $ \tar1dir ->
   withSystemTempDirectory "tardiff-XXXXXX" $ \tar2dir -> do
@@ -82,6 +98,7 @@ tardiff tar1 tar2 =
         hPutStr stderr err
         exitWith (ExitFailure 1)
 
+-- | tie all the bits together
 main :: IO ()
 main = do
   let v = normal
