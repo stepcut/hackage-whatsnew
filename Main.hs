@@ -3,7 +3,7 @@ module Main where
 
 import qualified Data.Map as Map
 import Distribution.Hackage.DB.Parsed
-#ifdef MIN_VERSION_hackage_db(2,0,0)
+#if MIN_VERSION_hackage_db(2,0,0)
 import Distribution.Hackage.DB.Path
 #endif
 import Distribution.Package (PackageName, PackageIdentifier(PackageIdentifier, pkgName, pkgVersion), unPackageName)
@@ -25,7 +25,7 @@ local :: Verbosity -> IO PackageDescription
 local v =
   fmap packageDescription (readPackageDescription v =<< defaultPackageDesc v)
 
-#ifdef MIN_VERSION_hackage_db(2,0,0)
+#if MIN_VERSION_hackage_db(2,0,0)
 readHackage = hackageTarball >>= readTarball Nothing
 #endif
 
@@ -36,7 +36,7 @@ hackage :: PackageName -- ^ the package name
         -> IO (Maybe PackageDescription)
 hackage pn = do
   hackage <- readHackage
-#ifdef MIN_VERSION_hackage_db(2,0,0)
+#if MIN_VERSION_hackage_db(2,0,0)
   case Map.lookup pn hackage of
 #else
   case Map.lookup (unPackageName pn) hackage of
@@ -44,7 +44,7 @@ hackage pn = do
     Nothing ->
       return Nothing
     (Just gpdMap) ->
-#ifdef MIN_VERSION_hackage_db(2,0,0)
+#if MIN_VERSION_hackage_db(2,0,0)
       return $ Just $ packageDescription (cabalFile $ snd $ head $ Map.toDescList gpdMap)
 #else
       return $ Just $ packageDescription (snd $ head $ Map.toDescList gpdMap)
