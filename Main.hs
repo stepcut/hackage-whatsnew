@@ -1,8 +1,12 @@
+{-# language CPP #-}
 module Main where
 
 import qualified Data.Map as Map
 import Distribution.Hackage.DB.Parsed
-import Distribution.Package (PackageName(..), PackageIdentifier(PackageIdentifier, pkgName, pkgVersion))
+#ifdef MIN_VERSION_hackage_db(2,0,0)
+import Distribution.Hackage.DB.Path
+#endif
+import Distribution.Package (PackageName, PackageIdentifier(PackageIdentifier, pkgName, pkgVersion), unPackageName)
 import Distribution.PackageDescription (GenericPackageDescription(packageDescription), PackageDescription(package))
 import Distribution.PackageDescription.Parse (readPackageDescription)
 import Distribution.Simple.Utils (defaultPackageDesc)
@@ -21,18 +25,30 @@ local :: Verbosity -> IO PackageDescription
 local v =
   fmap packageDescription (readPackageDescription v =<< defaultPackageDesc v)
 
+#ifdef MIN_VERSION_hackage_db(2,0,0)
+readHackage = hackageTarball >>= readTarball Nothing
+#endif
+
 -- | get the package description from hackage
 --
 -- This gets the latest version available.
 hackage :: PackageName -- ^ the package name
         -> IO (Maybe PackageDescription)
-hackage (PackageName pn) = do
+hackage pn = do
   hackage <- readHackage
+#ifdef MIN_VERSION_hackage_db(2,0,0)
   case Map.lookup pn hackage of
+#else
+  case Map.lookup (unPackageName pn) hackage of
+#endif
     Nothing ->
       return Nothing
     (Just gpdMap) ->
+#ifdef MIN_VERSION_hackage_db(2,0,0)
+      return $ Just $ packageDescription (cabalFile $ snd $ head $ Map.toDescList gpdMap)
+#else
       return $ Just $ packageDescription (snd $ head $ Map.toDescList gpdMap)
+#endif
 
 -- | calculate the directory to the tarball for `PackageIndentifier`
 packageDir :: FilePath -> PackageIdentifier -> FilePath
@@ -49,7 +65,7 @@ packageFile repoLocal pi =
 -- returns path to downloaded `.tar.gz`
 fetchFromHackage :: PackageIdentifier
                  -> IO FilePath
-fetchFromHackage pi@(PackageIdentifier (PackageName pn) version) = do
+fetchFromHackage pi@(PackageIdentifier _ version) = do
   (ec, out, err) <- readProcessWithExitCode "cabal" ["fetch", "--no-dependencies", display pi] ""
   case ec of
     ExitSuccess -> do

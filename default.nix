@@ -1,23 +1,17 @@
 { mkDerivation, base, Cabal, containers, directory, filepath
-, hackage-db, process, stdenv, temporary, cabal-install, ghc
-, makeWrapper
+, hackage-db, process, stdenv, temporary
 }:
-mkDerivation rec {
+mkDerivation {
   pname = "hackage-whatsnew";
-  version = "0.1.0.0";
+  version = "0.1.0.2";
   src = ./.;
   isLibrary = false;
   isExecutable = true;
-  buildDepends = [
+  executableHaskellDepends = [
     base Cabal containers directory filepath hackage-db process
     temporary
   ];
-  buildTools = [ makeWrapper ];
-  postInstall = ''
-    exe=$out/libexec/${pname}-${version}/hackage-whatsnew
-    install -D $out/bin/hackage-whatsnew $exe
-    rm -rf $out/{bin,lib,share}
-    makeWrapper $exe $out/bin/hackage-whatsnew --prefix PATH ":" "${cabal-install}/bin:${ghc}/bin"
-  '';
+  homepage = "https://github.com/stepcut/hackage-whatsnew";
+  description = "Check for differences between working directory and hackage";
   license = stdenv.lib.licenses.bsd3;
 }

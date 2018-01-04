@@ -1,5 +1,5 @@
 with (import <nixpkgs> {}).pkgs;
-let pkg = haskellngPackages.callPackage
+let pkg = haskellPackages.callPackage
             ({ mkDerivation, base, Cabal, containers, stdenv, hackage-db, process, cabal-install, coreutils, temporary }:
              mkDerivation {
                pname = "cabal-needs-upload";
@@ -7,7 +7,7 @@ let pkg = haskellngPackages.callPackage
                src = ./.;
                isLibrary = false;
                isExecutable = true;
-               buildDepends = [ base Cabal containers hackage-db process temporary ];
+               buildDepends = [ base Cabal containers hackage-db process temporary cabal-install ];
                buildTools = [ cabal-install coreutils ];
                license = stdenv.lib.licenses.bsd3;
              }) {};
