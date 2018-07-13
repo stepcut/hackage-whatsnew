@@ -8,7 +8,7 @@ import Distribution.Hackage.DB.Path
 #endif
 import Distribution.Package (PackageName, PackageIdentifier(PackageIdentifier, pkgName, pkgVersion), unPackageName)
 import Distribution.PackageDescription (GenericPackageDescription(packageDescription), PackageDescription(package))
-import Distribution.PackageDescription.Parse (readPackageDescription)
+import Distribution.PackageDescription.Parsec (readGenericPackageDescription)
 import Distribution.Simple.Utils (defaultPackageDesc)
 -- import Distribution.Version (Version)
 import Distribution.Text (display)
@@ -23,7 +23,7 @@ import System.Process
 -- | get the package description for the local directory
 local :: Verbosity -> IO PackageDescription
 local v =
-  fmap packageDescription (readPackageDescription v =<< defaultPackageDesc v)
+  fmap packageDescription (readGenericPackageDescription v =<< defaultPackageDesc v)
 
 #if MIN_VERSION_hackage_db(2,0,0)
 readHackage = hackageTarball >>= readTarball Nothing
